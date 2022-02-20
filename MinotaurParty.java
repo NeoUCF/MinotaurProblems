@@ -88,8 +88,12 @@ public class MinotaurParty
 
         while (!Guest.everyoneEntered)
         {
-            int randIndex = rnd.nextInt(NUM_GUEST);
-            guests.get(randIndex).setEntered();
+            // while (!Guest.guestInMaze)
+            // {
+            //     Guest.guestInMaze = true;
+                int randIndex = rnd.nextInt(NUM_GUEST);
+                guests.get(randIndex).setEntered();
+            // }
             // System.out.println(randIndex);
 
             // try
@@ -110,6 +114,7 @@ class Guest implements Runnable
 {
     Semaphore guestSemaphore;
     public static volatile boolean everyoneEntered = false;
+    public static volatile boolean guestInMaze = false;
     protected static volatile boolean cakeExists = true;
     protected boolean inMaze = false;
 
@@ -131,9 +136,13 @@ class Guest implements Runnable
         }
     }
 
-    public void setEntered()
+    public synchronized void setEntered()
     {
-        this.inMaze = true;
+        if (!guestInMaze)
+        {
+            guestInMaze = true;
+            this.inMaze = true;
+        }
     }
 
     public void run()
@@ -175,14 +184,15 @@ class CounterGuestThread extends Guest
 
                     if (count == NUM_GUEST - 1)
                     {
-                        System.out.println("Counter: " + count);
+                        // System.out.println("Counter: " + count);
                         count++;
                         everyoneEntered = true;
                     }
 
-                    System.out.println("Counter: " + count);
+                    // System.out.println("Counter: " + count);
                 }
-
+                
+                guestInMaze = false;
                 this.guestSemaphore.release();
             }
         }
@@ -217,7 +227,9 @@ class GuestThread extends Guest
                 {
                     eatCake();
                 }
-                System.out.println("Normal Guest#" + Thread.currentThread());
+                // System.out.println("Normal Guest#" + Thread.currentThread());
+                guestInMaze = false;
+
                 this.guestSemaphore.release();
             }
         }
