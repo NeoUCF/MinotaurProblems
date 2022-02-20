@@ -3,7 +3,11 @@ import java.util.List;
 import java.util.Random;
 import java.util.Scanner;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
 
 public class MinotaurParty
 {
@@ -94,18 +98,82 @@ public class MinotaurParty
             guests.get(randIndex).setEntered();
             // System.out.println(randIndex);
 
-            try
-            {
-                // System.out.println("=====================");
-                // System.out.println(randIndex);
-                Thread.sleep(5); // Is this bad?
-            }
-            catch (InterruptedException e)
-            {
-                e.printStackTrace();
-            }
+            // try
+            // {
+            //     // System.out.println("=====================");
+            //     // System.out.println(randIndex);
+            //     Thread.sleep(5); // Is this bad?
+            // }
+            // catch (InterruptedException e)
+            // {
+            //     e.printStackTrace();
+            // }
             iter++;
         }
+    }
+}
+
+class Qnode
+{
+    boolean locked = false;
+    Qnode next = null;
+}
+
+class MSCLock implements Lock
+{
+    AtomicReference<Qnode> tail = new AtomicReference<Qnode>();
+    Qnode qnode = new Qnode();
+
+    public void lock()
+    {
+        Qnode pred = tail.getAndSet(qnode);
+
+        if (pred != null)
+        {
+            qnode.locked = true;
+            pred.next = qnode;
+
+            while (qnode.locked) { ; }
+        }
+    }
+
+    public void unlock()
+    {
+        if (qnode.next == null)
+        {
+            if (tail.compareAndSet(qnode, null))
+            {
+                return;
+            }
+
+            while (qnode.next == null) { ; }
+        }
+
+        qnode.next.locked = false;
+    }
+
+    @Override
+    public void lockInterruptibly() throws InterruptedException {
+        // TODO Auto-generated method stub
+        
+    }
+
+    @Override
+    public boolean tryLock() {
+        // TODO Auto-generated method stub
+        return false;
+    }
+
+    @Override
+    public boolean tryLock(long time, TimeUnit unit) throws InterruptedException {
+        // TODO Auto-generated method stub
+        return false;
+    }
+
+    @Override
+    public Condition newCondition() {
+        // TODO Auto-generated method stub
+        return null;
     }
 }
 
