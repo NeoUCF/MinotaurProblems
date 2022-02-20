@@ -3,10 +3,12 @@ import java.util.List;
 import java.util.Random;
 import java.util.Scanner;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class MinotaurParty
 {
     private static int NUM_GUEST = 10; // Default to 10 guests
+    private static int iter = 1; // Number of iterations
 	public static List<Guest> guests = new ArrayList<>();
 
     public static void main(String[] args)
@@ -24,7 +26,7 @@ public class MinotaurParty
         final long endTime = System.currentTimeMillis();
 
         long executionTime = endTime - startTime;
-        System.out.println("It took " + executionTime + " milliseconds for all "
+        System.out.println("It took " + iter + " iterations and " + executionTime + " milliseconds for all "
             + NUM_GUEST + " guest(s) to confirm with certainty they all entered.");
     }
 
@@ -92,16 +94,17 @@ public class MinotaurParty
             guests.get(randIndex).setEntered();
             // System.out.println(randIndex);
 
-            // try
-            // {
-            //     // System.out.println("=====================");
-            //     // System.out.println(randIndex);
-            //     Thread.sleep(5); // Is this bad?
-            // }
-            // catch (InterruptedException e)
-            // {
-            //     e.printStackTrace();
-            // }
+            try
+            {
+                // System.out.println("=====================");
+                // System.out.println(randIndex);
+                Thread.sleep(5); // Is this bad?
+            }
+            catch (InterruptedException e)
+            {
+                e.printStackTrace();
+            }
+            iter++;
         }
     }
 }
@@ -111,7 +114,7 @@ class Guest implements Runnable
     Semaphore guestSemaphore;
     public static volatile boolean everyoneEntered = false;
     protected static volatile boolean cakeExists = true;
-    protected boolean inMaze = false;
+    protected static AtomicBoolean inMaze = new AtomicBoolean();
 
     Guest(Semaphore guestSemaphore)
     {
@@ -123,7 +126,7 @@ class Guest implements Runnable
         try
         {
             this.guestSemaphore.acquire();
-            this.inMaze = true;
+            inMaze.set(true);
         }
         catch (InterruptedException e)
         {
@@ -133,7 +136,7 @@ class Guest implements Runnable
 
     public void setEntered()
     {
-        this.inMaze = true;
+        inMaze.compareAndSet(false, true);
     }
 
     public void run()
@@ -164,10 +167,8 @@ class CounterGuestThread extends Guest
     {
         while (!everyoneEntered)
         {
-            if (inMaze)
+            if (!inMaze.compareAndSet(true, false))
             {
-                inMaze = false;
-
                 if (!cakeExists)
                 {
                     count++;
@@ -209,15 +210,13 @@ class GuestThread extends Guest
     {
         while (!everyoneEntered)
         {
-            if (inMaze)
+            if (!inMaze.compareAndSet(true, false))
             {
-                inMaze = false;
-
                 if (!hasEaten && cakeExists)
                 {
                     eatCake();
                 }
-                System.out.println("Normal Guest#" + Thread.currentThread());
+                System.out.println("Normal Guest#" + Thread.currentThread().getId());
                 this.guestSemaphore.release();
             }
         }
