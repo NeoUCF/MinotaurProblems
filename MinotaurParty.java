@@ -198,7 +198,11 @@ class GuestThread extends Guest
             if (inMaze)
             {
                 inMaze = false;
-                eatCake();
+
+                if (!hasEaten && cakeExists)
+                {
+                    eatCake();
+                }
                 System.out.println("Loving it" + Thread.currentThread());
                 this.guestSemaphore.release();
             }
