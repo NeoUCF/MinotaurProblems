@@ -2,9 +2,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.Scanner;
-import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class MinotaurParty
@@ -92,25 +90,28 @@ public class MinotaurParty
             int randIndex = rnd.nextInt(NUM_GUEST);
             if (Guest.mazeOccupied.compareAndSet(false, true))
             {
+                System.out.println("Entering: Guest - " + randIndex);
                 guests.get(randIndex).setEntered();
                 iter++;
+
+                // while (!guests.get(randIndex).inMaze) { ; }
             }
             // System.out.println(randIndex);
 
-            // try
-            // {
-            //     // System.out.println("=====================");
-            //     // System.out.println(randIndex);
-            //     Thread.sleep(500); // Is this bad?
-            // }
-            // catch (InterruptedException e)
-            // {
-            //     e.printStackTrace();
-            // }
-            // finally
-            // {
-            //     System.out.println("Unlocked");
-            // }
+            try
+            {
+                // System.out.println("=====================");
+                // System.out.println(randIndex);
+                Thread.sleep(0); // Is this bad?
+            }
+            catch (InterruptedException e)
+            {
+                e.printStackTrace();
+            }
+            finally
+            {
+                // System.out.println("Unlocked");
+            }
         }
     }
 }
@@ -131,19 +132,23 @@ class Guest implements Runnable
     {
         while (!everyoneEntered.get())
         {
-            queueLock.lock();
-            try
+            if (inMaze)
             {
-                enterMaze();
-            }
-            catch (Exception e)
-            {
-                e.printStackTrace();
-            }
-            finally
-            {
-                // if (queueLock.isHeldByCurrentThread())
-                queueLock.unlock();
+                queueLock.lock();
+                try
+                {
+                    enterMaze();
+                }
+                catch (Exception e)
+                {
+                    e.printStackTrace();
+                }
+                finally
+                {
+                    inMaze = false;
+                    // if (queueLock.isHeldByCurrentThread())
+                    queueLock.unlock();
+                }
             }
         }
     }
@@ -152,13 +157,14 @@ class Guest implements Runnable
     {
         while (mazeOccupied.get())
         {
-            System.out.println("Entered: " + Thread.currentThread());
+            // System.out.println("Entered: " + Thread.currentThread());
             if (Thread.currentThread().getName().equals("Counter"))
             {
                 if (cakeExists.compareAndSet(false, true))
                 {
                     count++;
                     System.out.println("Counter: " + count);
+                    System.out.println("Cake Replenished");
                 }
 
                 if (count == NUM_GUEST - 1)
@@ -172,11 +178,11 @@ class Guest implements Runnable
             {
                 if (!hasEaten && cakeExists.compareAndSet(true, false))
                 {
+                    hasEaten = true;
                     System.out.println("Eating: " + Thread.currentThread().getName());
                 }
             }
 
-            inMaze = false;
             mazeOccupied.set(false);
         }
     }
