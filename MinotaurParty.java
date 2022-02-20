@@ -132,19 +132,23 @@ class Guest implements Runnable
     {
         while (!everyoneEntered.get())
         {
-            queueLock.lock();
-            try
+            if (inMaze)
             {
-                enterMaze();
-            }
-            catch (Exception e)
-            {
-                e.printStackTrace();
-            }
-            finally
-            {
-                // if (queueLock.isHeldByCurrentThread())
-                queueLock.unlock();
+                queueLock.lock();
+                try
+                {
+                    enterMaze();
+                }
+                catch (Exception e)
+                {
+                    e.printStackTrace();
+                }
+                finally
+                {
+                    inMaze = false;
+                    // if (queueLock.isHeldByCurrentThread())
+                    queueLock.unlock();
+                }
             }
         }
     }
@@ -179,7 +183,6 @@ class Guest implements Runnable
                 }
             }
 
-            inMaze = false;
             mazeOccupied.set(false);
         }
     }
