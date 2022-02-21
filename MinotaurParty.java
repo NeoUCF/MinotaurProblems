@@ -95,7 +95,7 @@ public class MinotaurParty
                 guests.get(randIndex).setEntered();
                 iter++;
 
-                while (!guests.get(randIndex).inMaze) { ; }
+                while (Guest.mazeOccupied.get()) { ; }
             }
             // System.out.println(randIndex);
 
@@ -122,7 +122,7 @@ class Guest implements Runnable
     private static final ReentrantLock queueLock = new ReentrantLock();
     public static AtomicBoolean everyoneEntered = new AtomicBoolean();
     public static AtomicBoolean mazeOccupied = new AtomicBoolean();
-    public static AtomicBoolean cakeExists = new AtomicBoolean();
+    public static AtomicBoolean cakeExists = new AtomicBoolean(true);
     public static int count = 0;
     public static int NUM_GUEST;
 
@@ -135,29 +135,31 @@ class Guest implements Runnable
         {
             if (inMaze)
             {
-                queueLock.lock();
-                try
-                {
+                // queueLock.lock();
+                // try
+                // {
                     enterMaze();
-                }
-                catch (Exception e)
-                {
-                    e.printStackTrace();
-                }
-                finally
-                {
+                // }
+                // catch (Exception e)
+                // {
+                //     e.printStackTrace();
+                // }
+                // finally
+                // {
                     inMaze = false;
+                    mazeOccupied.set(false);
+
                     // if (queueLock.isHeldByCurrentThread())
-                    queueLock.unlock();
-                }
+                    // queueLock.unlock();
+                // }
             }
         }
     }
 
     public void enterMaze()
     {
-        while (mazeOccupied.get())
-        {
+        // while (mazeOccupied.get())
+        // {
             // System.out.println("Entered: " + Thread.currentThread());
             if (Thread.currentThread().getName().equals("Counter"))
             {
@@ -184,12 +186,15 @@ class Guest implements Runnable
                 }
             }
 
-            mazeOccupied.set(false);
-        }
+        //     mazeOccupied.set(false);
+        // }
     }
 
     public void setEntered()
     {
-        inMaze = true;
+        if (!hasEaten)
+            inMaze = true;
+        else
+            mazeOccupied.set(false);
     }
 }
