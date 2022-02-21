@@ -3,7 +3,6 @@ import java.util.List;
 import java.util.Random;
 import java.util.Scanner;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.locks.ReentrantLock;
 
 public class MinotaurParty
 {
@@ -82,7 +81,7 @@ public class MinotaurParty
     public static void labyrinth()
     {
         if (NUM_GUEST <= 1) Guest.everyoneEntered.set(true);
-        
+
         Random rnd = new Random();
 
         while (!Guest.everyoneEntered.get())
@@ -91,35 +90,16 @@ public class MinotaurParty
             if (Guest.mazeOccupied.compareAndSet(false, true))
             {
                 // System.out.println("Entering: Guest - " + randIndex);
-                // System.out.println("Random: Guest - " + randIndex);
                 guests.get(randIndex).setEntered();
+                
                 iter++;
-
-                while (Guest.mazeOccupied.get()) { ; }
             }
-            // System.out.println(randIndex);
-
-            // try
-            // {
-            //     // System.out.println("=====================");
-            //     // System.out.println(randIndex);
-            //     Thread.sleep(0); // Is this bad?
-            // }
-            // catch (InterruptedException e)
-            // {
-            //     e.printStackTrace();
-            // }
-            // finally
-            // {
-            //     // System.out.println("Unlocked");
-            // }
         }
     }
 }
 
 class Guest implements Runnable
 {
-    private static final ReentrantLock queueLock = new ReentrantLock();
     public static AtomicBoolean everyoneEntered = new AtomicBoolean();
     public static AtomicBoolean mazeOccupied = new AtomicBoolean();
     public static AtomicBoolean cakeExists = new AtomicBoolean(true);
@@ -135,66 +115,44 @@ class Guest implements Runnable
         {
             if (inMaze)
             {
-                // queueLock.lock();
-                // try
-                // {
-                    enterMaze();
-                // }
-                // catch (Exception e)
-                // {
-                //     e.printStackTrace();
-                // }
-                // finally
-                // {
-                    inMaze = false;
-                    mazeOccupied.set(false);
-
-                    // if (queueLock.isHeldByCurrentThread())
-                    // queueLock.unlock();
-                // }
+                exitMaze();
             }
         }
     }
 
-    public void enterMaze()
+    public void exitMaze()
     {
-        // while (mazeOccupied.get())
-        // {
-            // System.out.println("Entered: " + Thread.currentThread());
-            if (Thread.currentThread().getName().equals("Counter"))
+        if (Thread.currentThread().getName().equals("Counter"))
+        {
+            if (cakeExists.compareAndSet(false, true))
             {
-                if (cakeExists.compareAndSet(false, true))
-                {
-                    count++;
-                    System.out.println("Counter: " + count);
-                    System.out.println("Cake Replenished");
-                }
-
-                if (count == NUM_GUEST - 1)
-                {
-                    System.out.println("Counter: " + (count + 1));
-
-                    everyoneEntered.set(true);
-                }
-            }
-            else
-            {
-                if (!hasEaten && cakeExists.compareAndSet(true, false))
-                {
-                    hasEaten = true;
-                    System.out.println("Eating: " + Thread.currentThread().getName());
-                }
+                count++;
+                System.out.println("Counter: " + count);
+                System.out.println("Cake Replenished");
             }
 
-        //     mazeOccupied.set(false);
-        // }
+            if (count == NUM_GUEST - 1)
+            {
+                System.out.println("Counter: " + (count + 1));
+
+                everyoneEntered.set(true);
+            }
+        }
+        else
+        {
+            if (!hasEaten && cakeExists.compareAndSet(true, false))
+            {
+                hasEaten = true;
+                System.out.println("Eating: " + Thread.currentThread().getName());
+            }
+        }
+
+        inMaze = false;
+        mazeOccupied.set(false);
     }
 
     public void setEntered()
     {
-        if (!hasEaten)
-            inMaze = true;
-        else
-            mazeOccupied.set(false);
+        inMaze = true;
     }
 }
