@@ -12,8 +12,6 @@ public class MinotaurParty
 
     public static void main(String[] args)
     {
-        // Read user input.
-        // If incorrect input (non-integers), then defaults to 10 guests.
         getUserInput();
 
         createAndStartGuests();
@@ -29,6 +27,7 @@ public class MinotaurParty
             + NUM_GUEST + " guest(s) to confirm with certainty they all entered.");
     }
 
+    // If incorrect input (non-integers), then defaults to 10 guests.
     public static void getUserInput()
     {
         Scanner input = new Scanner(System.in);
@@ -50,6 +49,7 @@ public class MinotaurParty
         }
     }
 
+    // Prepare Guest Threads for use.
     public static void createAndStartGuests()
     {
         if (NUM_GUEST < 1) return;
@@ -78,6 +78,7 @@ public class MinotaurParty
 		}
     }
 
+    // Simulates choosing of guest at random to go into labyrinth.
     public static void labyrinth()
     {
         if (NUM_GUEST <= 1) Guest.everyoneEntered.set(true);
@@ -98,6 +99,7 @@ public class MinotaurParty
     }
 }
 
+// Has methods for guests to enter/exit maze, eat/replace cake, and count up guests.
 class Guest implements Runnable
 {
     public static AtomicBoolean everyoneEntered = new AtomicBoolean();
