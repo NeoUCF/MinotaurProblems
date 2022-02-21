@@ -90,28 +90,29 @@ public class MinotaurParty
             int randIndex = rnd.nextInt(NUM_GUEST);
             if (Guest.mazeOccupied.compareAndSet(false, true))
             {
-                System.out.println("Entering: Guest - " + randIndex);
+                // System.out.println("Entering: Guest - " + randIndex);
+                // System.out.println("Random: Guest - " + randIndex);
                 guests.get(randIndex).setEntered();
                 iter++;
 
-                // while (!guests.get(randIndex).inMaze) { ; }
+                while (!guests.get(randIndex).inMaze) { ; }
             }
             // System.out.println(randIndex);
 
-            try
-            {
-                // System.out.println("=====================");
-                // System.out.println(randIndex);
-                Thread.sleep(0); // Is this bad?
-            }
-            catch (InterruptedException e)
-            {
-                e.printStackTrace();
-            }
-            finally
-            {
-                // System.out.println("Unlocked");
-            }
+            // try
+            // {
+            //     // System.out.println("=====================");
+            //     // System.out.println(randIndex);
+            //     Thread.sleep(0); // Is this bad?
+            // }
+            // catch (InterruptedException e)
+            // {
+            //     e.printStackTrace();
+            // }
+            // finally
+            // {
+            //     // System.out.println("Unlocked");
+            // }
         }
     }
 }
@@ -125,8 +126,8 @@ class Guest implements Runnable
     public static int count = 0;
     public static int NUM_GUEST;
 
-    boolean hasEaten = false;
-    boolean inMaze = false;
+    volatile boolean hasEaten = false;
+    volatile boolean inMaze = false;
 
     public void run()
     {
