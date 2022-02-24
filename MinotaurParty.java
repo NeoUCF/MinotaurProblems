@@ -2,12 +2,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.Scanner;
-import java.util.concurrent.Semaphore;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicReference;
-import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.Lock;
 
 public class MinotaurParty
 {
@@ -94,6 +89,8 @@ public class MinotaurParty
         {
             int randIndex = rnd.nextInt(NUM_GUEST);
             guests.get(randIndex).setEntered();
+            // System.out.println("here " + guests.get(randIndex).myNode.get().locked);
+
             // System.out.println(randIndex);
 
             // try
@@ -106,80 +103,15 @@ public class MinotaurParty
             // {
             //     e.printStackTrace();
             // }
-            iter++;
+            // iter++;
         }
-    }
-}
-
-class Qnode
-{
-    boolean locked = false;
-    Qnode next = null;
-}
-
-class MSCLock implements Lock
-{
-    AtomicReference<Qnode> tail = new AtomicReference<Qnode>();
-    Qnode qnode = new Qnode();
-
-    public void lock()
-    {
-        Qnode pred = tail.getAndSet(qnode);
-
-        if (pred != null)
-        {
-            qnode.locked = true;
-            pred.next = qnode;
-
-            while (qnode.locked) { ; }
-        }
-    }
-
-    public void unlock()
-    {
-        if (qnode.next == null)
-        {
-            if (tail.compareAndSet(qnode, null))
-            {
-                return;
-            }
-
-            while (qnode.next == null) { ; }
-        }
-
-        qnode.next.locked = false;
-    }
-
-    @Override
-    public void lockInterruptibly() throws InterruptedException {
-        // TODO Auto-generated method stub
-        
-    }
-
-    @Override
-    public boolean tryLock() {
-        // TODO Auto-generated method stub
-        return false;
-    }
-
-    @Override
-    public boolean tryLock(long time, TimeUnit unit) throws InterruptedException {
-        // TODO Auto-generated method stub
-        return false;
-    }
-
-    @Override
-    public Condition newCondition() {
-        // TODO Auto-generated method stub
-        return null;
     }
 }
 
 // Has methods for guests to enter/exit maze, eat/replace cake, and count up guests.
-class Guest implements Runnable
+class Guest extends MSCLock implements Runnable
 {
     public static AtomicBoolean everyoneEntered = new AtomicBoolean();
-    public static AtomicBoolean mazeOccupied = new AtomicBoolean();
     public static AtomicBoolean cakeExists = new AtomicBoolean(true);
     public static int count = 0;
     public static int NUM_GUEST;
@@ -200,18 +132,19 @@ class Guest implements Runnable
 
     public void exitMaze()
     {
+        // System.out.println(Thread.currentThread().getName());
         if (Thread.currentThread().getName().equals("Counter"))
         {
             if (cakeExists.compareAndSet(false, true))
             {
                 count++;
-                System.out.println("Counter: " + count);
-                System.out.println("Cake Replenished");
+                // System.out.println("Counter: " + count);
+                // System.out.println("Cake Replenished");
             }
 
             if (count == NUM_GUEST - 1)
             {
-                System.out.println("Counter: " + (count + 1));
+                // System.out.println("Counter: " + (count + 1));
 
                 everyoneEntered.set(true);
             }
@@ -221,16 +154,20 @@ class Guest implements Runnable
             if (!hasEaten && cakeExists.compareAndSet(true, false))
             {
                 hasEaten = true;
-                System.out.println("Eating: " + Thread.currentThread().getName());
+                // System.out.println("Eating: " + Thread.currentThread().getName());
             }
         }
 
         inMaze = false;
-        mazeOccupied.set(false);
+        // System.out.println(this.myNode.get().locked);
     }
 
     public void setEntered()
     {
+        lock();
         inMaze = true;
+        unlock();
+
+        // System.out.println("x");
     }
 }
