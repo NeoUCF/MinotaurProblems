@@ -17,8 +17,6 @@ public class MinotaurParty
 
     public static void main(String[] args)
     {
-        // Read user input.
-        // If incorrect input (non-integers), then defaults to 10 guests.
         getUserInput();
 
         createAndStartGuests();
@@ -34,6 +32,7 @@ public class MinotaurParty
             + NUM_GUEST + " guest(s) to confirm with certainty they all entered.");
     }
 
+    // If incorrect input (non-integers), then defaults to 10 guests.
     public static void getUserInput()
     {
         Scanner input = new Scanner(System.in);
@@ -51,32 +50,30 @@ public class MinotaurParty
         finally
         {
             input.close();
+            Guest.NUM_GUEST = NUM_GUEST;
         }
     }
 
+    // Prepare Guest Threads for use.
     public static void createAndStartGuests()
     {
         if (NUM_GUEST < 1) return;
 
         Thread[] guestThreads = new Thread[NUM_GUEST];
 
-        // Restricts 1 guest to be in labyrinth at a time.
-		// The true parameter ensures guests come in fair order.
-    	Semaphore guestSemaphore = new Semaphore(1, true);
-
-        Guest tempHold = new CounterGuestThread(guestSemaphore, NUM_GUEST);
+        Guest tempHold = new Guest();
         guests.add(tempHold);
 
         // Create the guest that will count.
-		guestThreads[0] = new Thread(tempHold);
+		guestThreads[0] = new Thread(tempHold, "Counter");
 
         // Add other guests
         for (int i = 1; i < NUM_GUEST; i++)
         {
-            tempHold = new GuestThread(guestSemaphore);
+            tempHold = new Guest();
             guests.add(tempHold);
 
-            guestThreads[i] = new Thread(tempHold);
+            guestThreads[i] = new Thread(tempHold, "Guest - " + i);
         }
 
 		// Begin Labyrinth (start threads)
@@ -86,13 +83,14 @@ public class MinotaurParty
 		}
     }
 
+    // Simulates choosing of guest at random to go into labyrinth.
     public static void labyrinth()
     {
-        if (NUM_GUEST <= 1) Guest.everyoneEntered = true;
-        
+        if (NUM_GUEST <= 1) Guest.everyoneEntered.set(true);
+
         Random rnd = new Random();
 
-        while (!Guest.everyoneEntered)
+        while (!Guest.everyoneEntered.get())
         {
             int randIndex = rnd.nextInt(NUM_GUEST);
             guests.get(randIndex).setEntered();
@@ -177,116 +175,62 @@ class MSCLock implements Lock
     }
 }
 
+// Has methods for guests to enter/exit maze, eat/replace cake, and count up guests.
 class Guest implements Runnable
 {
-    Semaphore guestSemaphore;
-    public static volatile boolean everyoneEntered = false;
-    protected static volatile boolean cakeExists = true;
-    protected static AtomicBoolean inMaze = new AtomicBoolean();
+    public static AtomicBoolean everyoneEntered = new AtomicBoolean();
+    public static AtomicBoolean mazeOccupied = new AtomicBoolean();
+    public static AtomicBoolean cakeExists = new AtomicBoolean(true);
+    public static int count = 0;
+    public static int NUM_GUEST;
 
-    Guest(Semaphore guestSemaphore)
+    volatile boolean hasEaten = false;
+    volatile boolean inMaze = false;
+
+    public void run()
     {
-        this.guestSemaphore = guestSemaphore;
+        while (!everyoneEntered.get())
+        {
+            if (inMaze)
+            {
+                exitMaze();
+            }
+        }
     }
 
-    public void takePermit()
+    public void exitMaze()
     {
-        try
+        if (Thread.currentThread().getName().equals("Counter"))
         {
-            this.guestSemaphore.acquire();
-            inMaze.set(true);
+            if (cakeExists.compareAndSet(false, true))
+            {
+                count++;
+                System.out.println("Counter: " + count);
+                System.out.println("Cake Replenished");
+            }
+
+            if (count == NUM_GUEST - 1)
+            {
+                System.out.println("Counter: " + (count + 1));
+
+                everyoneEntered.set(true);
+            }
         }
-        catch (InterruptedException e)
+        else
         {
-            e.printStackTrace();
+            if (!hasEaten && cakeExists.compareAndSet(true, false))
+            {
+                hasEaten = true;
+                System.out.println("Eating: " + Thread.currentThread().getName());
+            }
         }
+
+        inMaze = false;
+        mazeOccupied.set(false);
     }
 
     public void setEntered()
     {
-        inMaze.compareAndSet(false, true);
-    }
-
-    public void run()
-    {
-        
-    }
-}
-
-class CounterGuestThread extends Guest
-{
-    private int count = 0;
-    private int NUM_GUEST;
-
-    CounterGuestThread(Semaphore guestSemaphore, int NUM_GUEST)
-    {
-        super(guestSemaphore);
-        this.NUM_GUEST = NUM_GUEST;
-    }
-
-    void requestCake()
-    {
-        System.out.println("Cake Replenished");
-        cakeExists = true;
-    }
-
-    @Override
-    public void run()
-    {
-        while (!everyoneEntered)
-        {
-            if (!inMaze.compareAndSet(true, false))
-            {
-                if (!cakeExists)
-                {
-                    count++;
-                    requestCake();
-
-                    if (count == NUM_GUEST - 1)
-                    {
-                        System.out.println("Counter: " + count);
-                        count++;
-                        everyoneEntered = true;
-                    }
-
-                    System.out.println("Counter: " + count);
-                }
-
-                this.guestSemaphore.release();
-            }
-        }
-    }
-}
-
-class GuestThread extends Guest
-{
-    private boolean hasEaten = false;
-    GuestThread(Semaphore guestSemaphore)
-    {
-        super(guestSemaphore);
-    }
-
-    void eatCake()
-    {
-        // System.out.println("eaten" + cakeExists);
-        cakeExists = false;
-        this.hasEaten = true;
-    } 
-
-    @Override
-    public void run()
-    {
-        while (!everyoneEntered)
-        {
-            if (!inMaze.compareAndSet(true, false))
-            {
-                if (!hasEaten && cakeExists)
-                {
-                    eatCake();
-                }
-                System.out.println("Normal Guest#" + Thread.currentThread().getId());
-                this.guestSemaphore.release();
-            }
-        }
+        inMaze = true;
     }
 }
