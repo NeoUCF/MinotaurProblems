@@ -3,6 +3,7 @@ import java.util.List;
 import java.util.Random;
 import java.util.Scanner;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.locks.ReentrantLock;
 
 public class MinotaurParty
 {
@@ -55,8 +56,10 @@ public class MinotaurParty
         if (NUM_GUEST < 1) return;
 
         Thread[] guestThreads = new Thread[NUM_GUEST];
+        ReentrantLock rel = new ReentrantLock(true); // true makes it fair
 
-        Guest tempHold = new Guest(NUM_GUEST);
+        Guest tempHold = new Guest(rel);
+        tempHold.isCounter = true;
         guests.add(tempHold);
 
         // Create the guest that will count.
@@ -65,7 +68,7 @@ public class MinotaurParty
         // Add other guests
         for (int i = 1; i < NUM_GUEST; i++)
         {
-            tempHold = new Guest(NUM_GUEST);
+            tempHold = new Guest(rel);
             guests.add(tempHold);
 
             guestThreads[i] = new Thread(tempHold, "Guest - " + i);
@@ -89,48 +92,45 @@ public class MinotaurParty
         {
             int randIndex = rnd.nextInt(NUM_GUEST);
             guests.get(randIndex).setEntered();
-            // System.out.println("here " + guests.get(randIndex).myNode.get().locked);
-
-            // System.out.println(randIndex);
-
-            // try
-            // {
-            //     // System.out.println("=====================");
-            //     // System.out.println(randIndex);
-            //     Thread.sleep(5); // Is this bad?
-            // }
-            // catch (InterruptedException e)
-            // {
-            //     e.printStackTrace();
-            // }
-            // iter++;
+            iter++;
         }
     }
 }
 
 // Has methods for guests to enter/exit maze, eat/replace cake, and count up guests.
-class Guest extends ALock implements Runnable
+class Guest extends ReentrantLock implements Runnable
 {
     public static AtomicBoolean everyoneEntered = new AtomicBoolean();
     public static AtomicBoolean cakeExists = new AtomicBoolean(true);
+    public static ReentrantLock reentrantLock;
     public static int count = 0;
     public static int NUM_GUEST;
 
     volatile boolean hasEaten = false;
     volatile boolean inMaze = false;
+    boolean isCounter;
 
-    public Guest(int capacity)
+    public Guest(ReentrantLock rel)
     {
-        super(capacity);
+        reentrantLock = rel;
     }
-    
+
     public void run()
     {
         while (!everyoneEntered.get())
         {
             if (inMaze)
             {
-                exitMaze();
+                reentrantLock.lock();
+                try
+                {
+                    // System.out.println(this.getOwner());
+                    exitMaze();
+                }
+                finally
+                {
+                    reentrantLock.unlock();
+                }
             }
         }
     }
@@ -138,7 +138,7 @@ class Guest extends ALock implements Runnable
     public void exitMaze()
     {
         // System.out.println(Thread.currentThread().getName());
-        if (Thread.currentThread().getName().equals("Counter"))
+        if (isCounter)
         {
             if (cakeExists.compareAndSet(false, true))
             {
@@ -167,11 +167,55 @@ class Guest extends ALock implements Runnable
         // System.out.println(this.myNode.get().locked);
     }
 
-    public synchronized void setEntered()
+    private void test()
     {
-        lock();
-        inMaze = true;
-        unlock();
+        // System.out.println(Thread.currentThread().getName());
+
+        if (isCounter)
+        {
+            if (cakeExists.compareAndSet(false, true))
+            {
+                count++;
+                // System.out.println("Counter: " + count);
+                // System.out.println("Cake Replenished");
+            }
+
+            if (count == NUM_GUEST - 1)
+            {
+                // System.out.println("Counter: " + (count + 1));
+
+                everyoneEntered.set(true);
+            }
+        }
+        else
+        {
+            if (!hasEaten && cakeExists.compareAndSet(true, false))
+            {
+                hasEaten = true;
+                // System.out.println("Eating: " + Thread.currentThread().getName());
+            }
+        }
+
+        inMaze = false;
+    }
+
+    public void setEntered()
+    {
+
+        // System.out.println(reentrantLock.isLocked());
+        // reentrantLock.lock();
+        // try
+        // {
+            // System.out.println(reentrantLock.getOwner());
+            // System.out.println(reentrantLock.isLocked());
+
+            inMaze = true;
+            // test();
+        // }
+        // finally
+        // {
+        //     reentrantLock.unlock();
+        // }
 
         // System.out.println("x");
     }
