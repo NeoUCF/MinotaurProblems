@@ -56,7 +56,7 @@ public class MinotaurParty
 
         Thread[] guestThreads = new Thread[NUM_GUEST];
 
-        Guest tempHold = new Guest();
+        Guest tempHold = new Guest(NUM_GUEST);
         guests.add(tempHold);
 
         // Create the guest that will count.
@@ -65,7 +65,7 @@ public class MinotaurParty
         // Add other guests
         for (int i = 1; i < NUM_GUEST; i++)
         {
-            tempHold = new Guest();
+            tempHold = new Guest(NUM_GUEST);
             guests.add(tempHold);
 
             guestThreads[i] = new Thread(tempHold, "Guest - " + i);
@@ -109,7 +109,7 @@ public class MinotaurParty
 }
 
 // Has methods for guests to enter/exit maze, eat/replace cake, and count up guests.
-class Guest extends MSCLock implements Runnable
+class Guest extends ALock implements Runnable
 {
     public static AtomicBoolean everyoneEntered = new AtomicBoolean();
     public static AtomicBoolean cakeExists = new AtomicBoolean(true);
@@ -119,6 +119,11 @@ class Guest extends MSCLock implements Runnable
     volatile boolean hasEaten = false;
     volatile boolean inMaze = false;
 
+    public Guest(int capacity)
+    {
+        super(capacity);
+    }
+    
     public void run()
     {
         while (!everyoneEntered.get())
