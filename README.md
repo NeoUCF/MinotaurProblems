@@ -1,8 +1,8 @@
 # MinotaurProblems
 ## How to Run the Program:
 On the command prompt, go to the directory which contains the .java files, then run:
-`java MinotaurParty.java` to run the solution to Problem 1.
-`java MinotaurVase.java` to run the solution to Problem 2.
+- `java MinotaurParty.java` to run the solution to Problem 1.
+- `java MinotaurVase.java` to run the solution to Problem 2.
 
 Both programs will ask for an input of the number of guests.
 
@@ -25,7 +25,7 @@ The 3rd strategy is the best strategy since it uses a queue. Using a queue reduc
 ### Correctness, Efficiency, and Evaluation:
 In `MinotaurVase.java`, I chose the 3rd strategy of using a queue. The main library that I used to implement this queue was by using the Semaphore Class's built in queue to keep track of the ordering an fairness of the guests. By allowing only 1 permit, the Semaphore locks the other attempted acquiring guests and places them in a queue. To help randomize the acquiring of a permit, I made the guest thread sleep a random amount of time prior to an acquire.
 
-The Efficiency of the program is expected to be O(n) time since the program ends when all n guests have viewed the vase. When a guest is ready to acquire a permit, the guest will then be placed in a queue waiting for their turn.
+The Efficiency of the program is expected to be O(n) time since the program ends when all n guests have viewed the vase. When a guest is ready to acquire a permit, the guest will then be placed in a queue waiting for their turn. Emperically, it was also viewed from the number of iterations that the solution ran around 2n iterations before ending, so the runtime is O(n).
 
 After running many tests, it was found that:
 - The average time for 10 guests was 17 milliseconds.
