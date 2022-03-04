@@ -16,11 +16,23 @@ public class MinotaurParty
 
         createAndStartGuests();
 
+        System.out.println("Starting Labyrinth...");
+
         final long startTime = System.currentTimeMillis();
 
         labyrinth();
 
         final long endTime = System.currentTimeMillis();
+
+        try
+        {
+            Thread.sleep(100);
+        } catch (InterruptedException e)
+        {
+            e.printStackTrace();
+        }
+
+        System.out.println("Ending Labyrinth...");
 
         long executionTime = endTime - startTime;
         System.out.println("It took " + Guest.iter + " iterations and " + executionTime + " milliseconds for all "

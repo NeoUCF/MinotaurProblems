@@ -15,6 +15,7 @@ public class MinotaurVase
 
         createAndStartGuests();
 
+        System.out.println("Opening Vase Room...");
         final long startTime = System.currentTimeMillis();
         
         vase();
@@ -28,6 +29,8 @@ public class MinotaurVase
         {
             e.printStackTrace();
         }
+        System.out.println("Closing Vase Room...");
+
 
         long executionTime = endTime - startTime;
         System.out.println("It took " + ViewingGuest.iter + " iterations and " + executionTime + " milliseconds for all "
@@ -87,6 +90,8 @@ public class MinotaurVase
 		}
     }
 
+    // Simulates vase room being open. Once flag is unleashed,
+    // Guests will rush to get into queue to see vase.
     public static void vase()
     {
         ViewingGuest.unleashFlag = true;
