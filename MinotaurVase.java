@@ -31,7 +31,7 @@ public class MinotaurVase
 
         long executionTime = endTime - startTime;
         System.out.println("It took " + ViewingGuest.iter + " iterations and " + executionTime + " milliseconds for all "
-            + NUM_GUEST + " guest(s) to confirm with certainty they all entered.");
+            + NUM_GUEST + " guest(s) to have viewed the crystal vase.");
     }
 
     // If incorrect input (non-integers), then defaults to 10 guests.
@@ -135,7 +135,7 @@ class ViewingGuest implements Runnable
 
     public void visitVase()
     {
-        System.out.println(Thread.currentThread().getName() + " is viewing the vase");
+        // System.out.println(Thread.currentThread().getName() + " is viewing the vase");
         if (!hasEntered)
         {
             hasEntered = true;

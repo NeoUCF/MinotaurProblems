@@ -41,6 +41,7 @@ public class MinotaurParty
         catch (Exception e)
         {
             System.err.println("Please enter in an integer.");
+            System.exit(1);
         }
         finally
         {

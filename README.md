@@ -1,4 +1,37 @@
 # MinotaurProblems
+## How to Run the Program:
+On the command prompt, go to the directory which contains the .java files, then run:
+`java MinotaurParty.java` to run the solution to Problem 1.
+`java MinotaurVase.java` to run the solution to Problem 2.
+
+Both programs will ask for an input of the number of guests.
+
+## Problem 1:
+### Correctness, Efficiency, and Evaluation:
+In `MinotaurParty.java`, the guest(s) can confirm with certainty they all entered by assigning a counter guest to count empty plates and to request a new cupcake. The other guest will eat the cupcake if it's their first time and will leave a cupcake if they've already eaten.
+
+For n guests, the expected runtime is O(n^2) since the exit condition is dependant on the counter guest counting n guest, the expected probability of the counter guest finding an empty plate is 1/n. This means after n passes through the labyrinth, the average/expected amount the counter will find empty plates is 1. So to find n guests, the counter must go through an average of n passes through maze for each guest. This means n * n, so the runtime is indeed O(n^2).
+
+For Experimental evaluation, I tested between 3 different locking mechanism: MSCLock, AndersonLock, and ReentrantLock. The MSCLock and AndersonLock are my own implementation so it may not be the most optimal for this given problem. Running the MSCLock on 100 guests would take an average of 72000 milliseconds. Running the AndersonLock on 100 guests would take an average of 68000 milliseconds. Running the ReentrantLock would take an average of 3200 milliseconds. All the experimental tests take place on a Lenovo IdeaPad Flex 5 which has a series 4000 Ryzen 7 (8 core CPU).
+
+## Problem 2:
+### Strategy Discussion:
+For the Crystal Vase problem, the 1st strategy of stop by and check is not very good since a guest may be 'starved' from actually seeing the vase. There may also be a lot of contention between the guests if there is a large crowd fight over entry to the vase room. There is no ordering as to when the guests can enter, so it's possible a single guest can hog up the viewing of the vase.
+
+The 2nd strategy is better than the first strategy as it significantly reduces contention by using a visible flag to all guests interesting in entering the vase room. However, this strategy still faces the issue of a guest being 'starved' from the vase.
+
+The 3rd strategy is the best strategy since it uses a queue. Using a queue reduces contention, it brings ordering and fairness to the guests, and it ensure there is no 'starvation' by allowing each guest to have a chance to see the vase.
+
+### Correctness, Efficiency, and Evaluation:
+In `MinotaurVase.java`, I chose the 3rd strategy of using a queue. The main library that I used to implement this queue was by using the Semaphore Class's built in queue to keep track of the ordering an fairness of the guests. By allowing only 1 permit, the Semaphore locks the other attempted acquiring guests and places them in a queue. To help randomize the acquiring of a permit, I made the guest thread sleep a random amount of time prior to an acquire.
+
+The Efficiency of the program is expected to be O(n) time since the program ends when all n guests have viewed the vase. When a guest is ready to acquire a permit, the guest will then be placed in a queue waiting for their turn.
+
+After running many tests, it was found that:
+- The average time for 10 guests was 17 milliseconds.
+- The average time for 100 guests was 130 milliseconds.
+- The average time for 1000 guests was 1200 milliseconds.
+
 ## Problem 1: Minotaur’s Birthday Party (50 points)
 
 The Minotaur invited N guests to his birthday party. When the guests arrived, he made the following announcement.
