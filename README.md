@@ -8,7 +8,7 @@ Both programs will ask for an input of the number of guests.
 
 ## Problem 1:
 ### Correctness, Efficiency, and Evaluation:
-In `MinotaurParty.java`, the guest(s) can confirm with certainty they all entered by assigning a counter guest to count empty plates and to request a new cupcake. The other guest will eat the cupcake if it's their first time and will leave a cupcake if they've already eaten.
+In `MinotaurParty.java`, the guest(s) can confirm with certainty they all entered by assigning a counter guest to count empty plates and to request a new cupcake. The other guests will eat the cupcake if it's their first time and will leave a cupcake if they've already eaten. Once the counter guest counts n - 1 empty plates (n being the total number of guests known at the beginning), that means everyone had their turn at eating the cupcake, which means everyone entered the labyrinth.
 
 For n guests, the expected runtime is O(n^2) since the exit condition is dependant on the counter guest counting n guest, the expected probability of the counter guest finding an empty plate is 1/n. This means after n passes through the labyrinth, the average/expected amount the counter will find empty plates is 1. So to find n guests, the counter must go through an average of n passes through maze for each guest. This means n * n, so the runtime is indeed O(n^2).
 
@@ -16,7 +16,7 @@ For Experimental evaluation, I tested between 3 different locking mechanism: MSC
 
 ## Problem 2:
 ### Strategy Discussion:
-For the Crystal Vase problem, the 1st strategy of stop by and check is not very good since a guest may be 'starved' from actually seeing the vase. There may also be a lot of contention between the guests if there is a large crowd fight over entry to the vase room. There is no ordering as to when the guests can enter, so it's possible a single guest can hog up the viewing of the vase.
+For the Crystal Vase problem, the 1st strategy of stop by and check is not very good since a guest may be 'starved' from actually seeing the vase. Although this strategy is simple to implement and it does ensure mutual exclusion, there may also be a lot of contention between the guests if there is a large crowd fight over entry to the vase room. There is also no ordering as to when the guests can enter, so it's possible a single guest can hog up the viewing of the vase.
 
 The 2nd strategy is better than the first strategy as it significantly reduces contention by using a visible flag to all guests interesting in entering the vase room. However, this strategy still faces the issue of a guest being 'starved' from the vase.
 
