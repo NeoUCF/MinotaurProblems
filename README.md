@@ -12,7 +12,9 @@ In `MinotaurParty.java`, the guest(s) can confirm with certainty they all entere
 
 For n guests, the expected runtime is O(n^2) since the exit condition is dependant on the counter guest counting n guest, the expected probability of the counter guest finding an empty plate is 1/n. This means after n passes through the labyrinth, the average/expected amount the counter will find empty plates is 1. So to find n guests, the counter must go through an average of n passes through maze for each guest. This means n * n, so the runtime is indeed O(n^2).
 
-For Experimental evaluation, I tested between 3 different locking mechanism: MSCLock, AndersonLock, and ReentrantLock. The MSCLock and AndersonLock are my own implementation so it may not be the most optimal for this given problem. Running the MSCLock on 100 guests would take an average of 72000 milliseconds. Running the AndersonLock on 100 guests would take an average of 68000 milliseconds. Running the ReentrantLock would take an average of 3200 milliseconds. All the experimental tests take place on a Lenovo IdeaPad Flex 5 which has a series 4000 Ryzen 7 (8 core CPU).
+For Experimental evaluation, I tested between 3 different locking mechanism: MSCLock, AndersonLock, and ReentrantLock. The MSCLock and AndersonLock are my own implementation so it may not be the most optimal for this given problem. Running the MSCLock on 100 guests would take an average of 72000 milliseconds. Running the AndersonLock on 100 guests would take an average of 68000 milliseconds. Running the ReentrantLock would take an average of 3200 milliseconds. All the experimental tests take place on a Lenovo IdeaPad Flex 5 which has a series 4000 Ryzen 7 (8 core CPU). I have also tested the above locking mechanism on Eustis and found significantly faster times due to Eustis having more processors. For testing on Eustis, the MSCLock takes an average of around 4500 milliseconds. The AndersonLock would take around 5500 milliseconds. The ReentrantLock would take 300 milliseconds.
+
+Overall, it seems the ReentrantLock is the fastest as it contains less associated overhead of utilizing arrays or linked lists among many threads. In my code, I ensured fair ordering within the reentrant lock, so guests will enter the labyrinth in the order the minotaur orders them.
 
 ## Problem 2:
 ### Strategy Discussion:
@@ -28,9 +30,11 @@ In `MinotaurVase.java`, I chose the 3rd strategy of using a queue. The main libr
 The Efficiency of the program is expected to be O(n) time since the program ends when all n guests have viewed the vase. When a guest is ready to acquire a permit, the guest will then be placed in a queue waiting for their turn. Emperically, it was also viewed from the number of iterations that the solution ran around 2n iterations before ending, so the runtime is O(n).
 
 After running many tests, it was found that:
-- The average time for 10 guests was 17 milliseconds.
-- The average time for 100 guests was 130 milliseconds.
-- The average time for 1000 guests was 1200 milliseconds.
+- The average time for 10 guests was 17 milliseconds. (On Eustis, 8 milliseconds)
+- The average time for 100 guests was 130 milliseconds. (On Eustis, 100 milliseconds)
+- The average time for 1000 guests was 1200 milliseconds. (Can't test on Eustis since I think they limit max number of threads)
+
+Using semaphores for this was great. Once the guest in the vase room releases their permit, the next guest at the head of the queue immediately goes in while the other guests in queue continue to wait for their turn.
 
 ## Problem 1: Minotaur’s Birthday Party (50 points)
 
